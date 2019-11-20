@@ -2,7 +2,6 @@
 #define SANE_PARAMETERS_H
 
 #include <sane/sane.h>
-#include <node.h>
 #include "nan.h"
 
 class SaneParameters : public node::ObjectWrap {

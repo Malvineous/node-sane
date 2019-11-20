@@ -2,7 +2,6 @@
 
 using v8::Local;
 using v8::String;
-using v8::Handle;
 using v8::Value;
 using v8::Function;
 using v8::FunctionTemplate;
@@ -29,7 +28,7 @@ NAN_MODULE_INIT(SaneDevice::Init) {
     Nan::SetAccessor(tpl->InstanceTemplate(), Nan::New("type").ToLocalChecked(), GetType);
 
     constructor_template.Reset(tpl);
-    target->Set(Nan::New("SaneDevice").ToLocalChecked(), tpl->GetFunction());
+    Nan::Set(target, Nan::New("SaneDevice").ToLocalChecked(), Nan::GetFunction(tpl).ToLocalChecked());
 }
 
 NAN_METHOD(SaneDevice::New) {

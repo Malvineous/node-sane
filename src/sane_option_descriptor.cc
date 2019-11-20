@@ -31,7 +31,7 @@ NAN_MODULE_INIT(SaneOptionDescriptor::Init) {
     //Nan::SetAccessor(tpl->InstanceTemplate(), Nan::New("constraint").ToLocalChecked(), GetConstraint);
     
     constructor_template.Reset(tpl);
-    target->Set(Nan::New("SaneOptionDescriptor").ToLocalChecked(), tpl->GetFunction()); 
+    Nan::Set(target, Nan::New("SaneOptionDescriptor").ToLocalChecked(), Nan::GetFunction(tpl).ToLocalChecked());
 }
 
 NAN_METHOD(SaneOptionDescriptor::New) {

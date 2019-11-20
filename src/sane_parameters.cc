@@ -27,7 +27,7 @@ NAN_MODULE_INIT(SaneParameters::Init) {
 
 	// Make it visible in JavaScript
     constructor_template.Reset(tpl);
-    target->Set(Nan::New("SaneParameters").ToLocalChecked(), tpl->GetFunction());
+    Nan::Set(target, Nan::New("SaneParameters").ToLocalChecked(), Nan::GetFunction(tpl).ToLocalChecked());
 }
 
 NAN_METHOD(SaneParameters::New) {

@@ -2,7 +2,6 @@
 #define SANE_OPTION_DESCRIPTOR_H
 
 #include <sane/sane.h>
-#include <node.h>
 #include "nan.h"
 
 class SaneOptionDescriptor : public Nan::ObjectWrap {

@@ -2,7 +2,6 @@
 #define SANE_HANDLE_H
 
 #include <sane/sane.h>
-#include <node.h>
 #include "nan.h"
 
 class SaneHandle : public Nan::ObjectWrap {

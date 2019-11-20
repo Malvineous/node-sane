@@ -26,8 +26,8 @@
   },
   "homepage": "https://github.com/yjwong/node-sane#readme",
   "dependencies": {
-    "nan": "^2.1.0",
-    "node-pre-gyp": "^0.6.13"
+    "nan": "^2.14.0",
+    "node-pre-gyp": "^0.14.0"
   },
   "bundledDepdencies": [
     "node-pre-gyp"

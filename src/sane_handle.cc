@@ -15,7 +15,7 @@ NAN_MODULE_INIT(SaneHandle::Init) {
     tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
     constructor_template.Reset(tpl);
-    target->Set(Nan::New("SaneHandle").ToLocalChecked(), tpl->GetFunction());
+    Nan::Set(target, Nan::New("SaneHandle").ToLocalChecked(), Nan::GetFunction(tpl).ToLocalChecked());
 }
 
 NAN_METHOD(SaneHandle::New) {

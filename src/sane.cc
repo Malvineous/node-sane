@@ -1,10 +1,7 @@
 #include <iostream>
 #include <cstring>
 #include <arpa/inet.h>
-#include <node.h>
-#include <node_buffer.h>
 #include <sane/sane.h>
-#include <v8.h>
 #include "sane_device.h"
 #include "sane_handle.h"
 #include "sane_option_descriptor.h"
@@ -20,7 +17,6 @@ using v8::Array;
 using v8::Value;
 using v8::Boolean;
 using v8::Function;
-using v8::Handle;
 using v8::External;
 using v8::FunctionTemplate;
 
@@ -55,23 +51,23 @@ public:
         Nan::HandleScope scope;
 
         Local<ObjectTemplate> result = Nan::New<ObjectTemplate>();
-        Local<Object> object = result->NewInstance();
-        object->Set(Nan::New("status").ToLocalChecked(), Nan::New(status));
+        Local<Object> object = Nan::NewInstance(result).ToLocalChecked();
+        Nan::Set(object, Nan::New("status").ToLocalChecked(), Nan::New(status));
 
         if (status == SANE_STATUS_GOOD) {
             Local<Array> deviceListArr = Nan::New<Array>();
             for (int i = 0; deviceList[i]; i++) {
                 Local<FunctionTemplate> deviceTpl = Nan::New(SaneDevice::constructor_template);
-                Local<Function> deviceFunc = deviceTpl->GetFunction();
-                Handle<Value> deviceFuncArgs[] = { Nan::New<External>(const_cast<SANE_Device*>(deviceList[i])) };
-                Local<Value> deviceObj = deviceFunc->NewInstance(1, deviceFuncArgs);
-                deviceListArr->Set(i, deviceObj);
+                Local<Function> deviceFunc = Nan::GetFunction(deviceTpl).ToLocalChecked();
+                Local<Value> deviceFuncArgs[] = { Nan::New<External>(const_cast<SANE_Device*>(deviceList[i])) };
+                Local<Value> deviceObj = Nan::NewInstance(deviceFunc, 1, deviceFuncArgs).ToLocalChecked();
+                Nan::Set(deviceListArr, i, deviceObj);
             }
-            object->Set(Nan::New("deviceList").ToLocalChecked(), deviceListArr);
+            Nan::Set(object, Nan::New("deviceList").ToLocalChecked(), deviceListArr);
         }
 
         Local<Value> argv[] = { object };
-        callback->Call(1, argv);
+        callback->Call(1, argv, this->async_resource);
     }
 
 private:
@@ -118,19 +114,19 @@ NAN_METHOD(GetDevicesSync) {
     status = sane_get_devices(&deviceList, localOnly);
 
     Local<ObjectTemplate> result = Nan::New<ObjectTemplate>();
-    Local<Object> object = result->NewInstance();
-    object->Set(Nan::New("status").ToLocalChecked(), Nan::New(status));
+    Local<Object> object = Nan::NewInstance(result).ToLocalChecked();
+    Nan::Set(object, Nan::New("status").ToLocalChecked(), Nan::New(status));
 
     if (status == SANE_STATUS_GOOD) {
         Local<Array> deviceListArr = Nan::New<Array>();
         for (int i = 0; deviceList[i]; i++) {
             Local<FunctionTemplate> deviceTpl = Nan::New(SaneDevice::constructor_template);
-            Local<Function> deviceFunc = deviceTpl->GetFunction();
-            Handle<Value> deviceFuncArgs[] = { Nan::New<External>(const_cast<SANE_Device*>(deviceList[i])) };
-            Local<Value> deviceObj = deviceFunc->NewInstance(1, deviceFuncArgs);
-            deviceListArr->Set(i, deviceObj);
+            Local<Function> deviceFunc = Nan::GetFunction(deviceTpl).ToLocalChecked();
+            Local<Value> deviceFuncArgs[] = { Nan::New<External>(const_cast<SANE_Device*>(deviceList[i])) };
+            Local<Value> deviceObj = Nan::NewInstance(deviceFunc, 1, deviceFuncArgs).ToLocalChecked();
+            Nan::Set(deviceListArr, i, deviceObj);
         }
-        object->Set(Nan::New("deviceList").ToLocalChecked(), deviceListArr);
+        Nan::Set(object, Nan::New("deviceList").ToLocalChecked(), deviceListArr);
     }
 
     info.GetReturnValue().Set(object);
@@ -150,18 +146,18 @@ public:
         Nan::HandleScope scope;
 
         Local<ObjectTemplate> result = Nan::New<ObjectTemplate>();
-        Local<Object> object = result->NewInstance();
-        object->Set(Nan::New("status").ToLocalChecked(), Nan::New(status));
+        Local<Object> object = Nan::NewInstance(result).ToLocalChecked();
+        Nan::Set(object, Nan::New("status").ToLocalChecked(), Nan::New(status));
         if (status == SANE_STATUS_GOOD) {
             Local<FunctionTemplate> handleTpl = Nan::New(SaneHandle::constructor_template);
-            Local<Function> handleFunc = handleTpl->GetFunction();
-            Handle<Value> handleFuncArgs[] = { Nan::New<External>(handle) };
-            Local<Value> handleObj = handleFunc->NewInstance(1, handleFuncArgs);
-            object->Set(Nan::New("handle").ToLocalChecked(), handleObj);
+            Local<Function> handleFunc = Nan::GetFunction(handleTpl).ToLocalChecked();
+            Local<Value> handleFuncArgs[] = { Nan::New<External>(handle) };
+            Local<Value> handleObj = Nan::NewInstance(handleFunc, 1, handleFuncArgs).ToLocalChecked();
+            Nan::Set(object, Nan::New("handle").ToLocalChecked(), handleObj);
         }
 
         Local<Value> argv[] = { object };
-        callback->Call(1, argv);
+        callback->Call(1, argv, this->async_resource);
     }
 
 private:
@@ -185,7 +181,7 @@ NAN_METHOD(Open) {
         return Nan::ThrowTypeError("Second argument must be a callback function");
     }
 
-    String::Utf8Value nameArg (info[0].As<String>());
+    Nan::Utf8String nameArg (info[0].As<String>());
     std::string name (*nameArg);
     Nan::Callback* callback = new Nan::Callback(info[1].As<Function>());
     Nan::AsyncQueueWorker(new OpenWorker(callback, name.c_str()));
@@ -202,7 +198,7 @@ NAN_METHOD(OpenSync) {
         return Nan::ThrowTypeError("First argument must be a string");
     }
 
-    String::Utf8Value nameArg (info[0].As<String>());
+    Nan::Utf8String nameArg (info[0].As<String>());
     std::string name (*nameArg);
     
     SANE_Handle handle;
@@ -210,15 +206,15 @@ NAN_METHOD(OpenSync) {
     status = sane_open(name.c_str(), &handle);
 
     Local<ObjectTemplate> result = Nan::New<ObjectTemplate>();
-    Local<Object> object = result->NewInstance();
-    object->Set(Nan::New("status").ToLocalChecked(), Nan::New(status));
+    Local<Object> object = Nan::NewInstance(result).ToLocalChecked();
+    Nan::Set(object, Nan::New("status").ToLocalChecked(), Nan::New(status));
 
     if (status == SANE_STATUS_GOOD) {
         Local<FunctionTemplate> handleTpl = Nan::New(SaneHandle::constructor_template);
-        Local<Function> handleFunc = handleTpl->GetFunction();
-        Handle<Value> handleFuncArgs[] = { Nan::New<External>(handle) };
-        Local<Value> handleObj = handleFunc->NewInstance(1, handleFuncArgs);
-        object->Set(Nan::New("handle").ToLocalChecked(), handleObj);
+        Local<Function> handleFunc = Nan::GetFunction(handleTpl).ToLocalChecked();
+        Local<Value> handleFuncArgs[] = { Nan::New<External>(handle) };
+        Local<Value> handleObj = Nan::NewInstance(handleFunc, 1, handleFuncArgs).ToLocalChecked();
+        Nan::Set(object, Nan::New("handle").ToLocalChecked(), handleObj);
     }
 
     info.GetReturnValue().Set(object);
@@ -237,7 +233,7 @@ public:
     void HandleOKCallback() {
         Nan::HandleScope scope;
         Local<Value> argv[] = {};
-        callback->Call(0, argv);
+        callback->Call(0, argv, this->async_resource);
     }
     
 private:
@@ -312,9 +308,9 @@ NAN_METHOD(GetOptionDescriptor) {
 	}
 
     Local<FunctionTemplate> descriptorTpl = Nan::New(SaneOptionDescriptor::constructor_template);
-    Local<Function> descriptorFunc = descriptorTpl->GetFunction();
-    Handle<Value> descriptorFuncArgs[] = { Nan::New<External>(const_cast<SANE_Option_Descriptor*>(option)) };
-    Local<Value> descriptorObj = descriptorFunc->NewInstance(1, descriptorFuncArgs);
+    Local<Function> descriptorFunc = Nan::GetFunction(descriptorTpl).ToLocalChecked();
+    Local<Value> descriptorFuncArgs[] = { Nan::New<External>(const_cast<SANE_Option_Descriptor*>(option)) };
+    Local<Value> descriptorObj = Nan::NewInstance(descriptorFunc, 1, descriptorFuncArgs).ToLocalChecked();
     
     info.GetReturnValue().Set(descriptorObj);
 }
@@ -353,7 +349,7 @@ NAN_METHOD(ControlOption) {
 	status = sane_control_option(handle->getHandle(), n->Value(), (SANE_Action) a->Value(), v, &i);
 
 	// Perform byte order conversion.
-	size_t v_words = node::Buffer::Length (info[3]->ToObject()) / sizeof (uint32_t);
+	size_t v_words = node::Buffer::Length (Nan::To<v8::Object>(info[3]).ToLocalChecked()) / sizeof (uint32_t);
 	for (size_t j = 0; j < v_words; j++) {
 		uint32_t* v_uint32 = (uint32_t*) v;
 		v_uint32[j] = htonl(v_uint32[j]);
@@ -415,9 +411,9 @@ NAN_METHOD(GetParameters) {
 	status = sane_get_parameters(handle->getHandle(), parameters);
 	if (status == SANE_STATUS_GOOD) {
         Local<FunctionTemplate> paramsTpl = Nan::New(SaneParameters::constructor_template);
-        Local<Function> paramsFunc = paramsTpl->GetFunction();
-        Handle<Value> paramsFuncArgs[] = { Nan::New<External>(parameters) };
-        Local<Value> paramsObj = paramsFunc->NewInstance(1, paramsFuncArgs);
+        Local<Function> paramsFunc = Nan::GetFunction(paramsTpl).ToLocalChecked();
+        Local<Value> paramsFuncArgs[] = { Nan::New<External>(parameters) };
+        Local<Value> paramsObj = Nan::NewInstance(paramsFunc, 1, paramsFuncArgs).ToLocalChecked();
         info.GetReturnValue().Set(paramsObj);
 	} else {
         info.GetReturnValue().Set(Nan::New(status));
@@ -459,15 +455,15 @@ public:
         Nan::HandleScope scope;
 
         Local<ObjectTemplate> result = Nan::New<ObjectTemplate>();
-        Local<Object> object = result->NewInstance();
-        object->Set(Nan::New("status").ToLocalChecked(), Nan::New(status));
+        Local<Object> object = Nan::NewInstance(result).ToLocalChecked();
+        Nan::Set(object, Nan::New("status").ToLocalChecked(), Nan::New(status));
 
         if (status == SANE_STATUS_GOOD) {
-            object->Set(Nan::New("length").ToLocalChecked(), Nan::New(len));
+            Nan::Set(object, Nan::New("length").ToLocalChecked(), Nan::New(len));
         }
 
         Local<Value> argv[] = { object };
-        callback->Call(1, argv);
+        callback->Call(1, argv, this->async_resource);
     }
 
 private:
@@ -529,10 +525,10 @@ NAN_METHOD(ReadSync) {
 	status = sane_read(handle->getHandle(), buf, node::Buffer::Length(info[1].As<Object>()),
 		&len);
 
-	Local<ObjectTemplate> result = ObjectTemplate::New();
-	Local<Object> object = result->NewInstance();
-	object->Set(Nan::New("status").ToLocalChecked(), Nan::New(status));
-	object->Set(Nan::New("length").ToLocalChecked(), Nan::New(len));
+	Local<ObjectTemplate> result = Nan::New<ObjectTemplate>();
+	Local<Object> object = Nan::NewInstance(result).ToLocalChecked();
+	Nan::Set(object, Nan::New("status").ToLocalChecked(), Nan::New(status));
+	Nan::Set(object, Nan::New("length").ToLocalChecked(), Nan::New(len));
     info.GetReturnValue().Set(object);
 }
 
@@ -549,7 +545,7 @@ public:
     void HandleOKCallback() {
         Nan::HandleScope scope;
         Local<Value> argv[] = {};
-        callback->Call(0, argv);
+        callback->Call(0, argv, this->async_resource);
     }
 
 private:
@@ -629,7 +625,7 @@ NAN_METHOD(NumberToFixed) {
     info.GetReturnValue().Set(Nan::New(val));
 }
 
-void InitAll(Handle<Object> exports) {
+void InitAll(Local<Object> exports) {
     SaneParameters::Init(exports);
     SaneHandle::Init(exports);
     SaneDevice::Init(exports);
